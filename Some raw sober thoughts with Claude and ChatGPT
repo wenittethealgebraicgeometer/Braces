@@ -1,0 +1,32 @@
+Small note: I didn't use the name "EnterIf" earlier, but I like it, so let's run with it. Reading `{` as EnterIf and `}` as CloseIf works well.
+
+**Your example in OCaml:**
+```ocaml
+if a && b then prove_something ()
+```
+No braces are needed here. `then` plays the role of EnterIf, and the branch ends at the end of the expression (or at `end`/`)` if you group several statements).
+
+**Mapping to P → Q:**
+
+`if P { Q }` only matches implication if you make the implicit else explicit. A missing else means "else do nothing", but logic needs "else true" (vacuous truth):
+
+```ocaml
+let implies p q = if p then q else true
+(* equivalent to: not p || q *)
+```
+
+| P | Q | P → Q | `if P { Q }` |
+|---|---|-------|--------------|
+| T | T | T | enter, Q holds → **T** |
+| T | F | F | enter, Q fails → **F** |
+| F | T | T | skip block → **T** (vacuous) |
+| F | F | T | skip block → **T** (vacuous) |
+
+The only way to get F is to enter the block and have Q fail. If the block is never entered, nothing can be falsified, so the statement counts as true.
+
+**Two things to watch:**
+
+- `P && Q` is not implication. It would give F when P is false.
+- `not p || q` short-circuits just like the code: when P is false, Q is never evaluated, which mirrors CloseIf being jumped to without running the body.
+
+So in your symbolic system, you could define `P { Q }` as shorthand for `P → Q`, with the rule that a skipped block evaluates to true.
